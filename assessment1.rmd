@@ -1,0 +1,26 @@
+---
+title: 'Assessment 1:'
+author: "Rameez Khan 156558"
+date: "05/03/2022"
+output: html_document
+---
+
+## Assessment 1
+
+**R Markdown** is a format for writing _reproducible_, _dynamic_ reports with R. 
+It can be used to embed R **code** and **results** into **slideshows**, **pdfs**
+, **html** _documents_, **Word** files and more. 
+
+Further details can be found [here](https://rmarkdown.rstudio.com/lesson-8.html) 
+
+```{r}
+library(readr)
+fastfood <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-09-04/fastfood_calories.csv")
+
+knitr::kable(fastfood[1:10, 2:6], "pipe")
+
+
+```
+
+
+
