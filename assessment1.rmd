@@ -7,6 +7,8 @@ output: html_document
 
 ## Assessment 1
 
+Part 1
+
 **R Markdown** is a format for writing _reproducible_, _dynamic_ reports with R. 
 It can be used to embed R **code** and **results** into **slideshows**, **pdfs**
 , **html** _documents_, **Word** files and more. 
@@ -22,5 +24,137 @@ knitr::kable(fastfood[1:10, 2:6], "pipe")
 
 ```
 
+Part 2
 
+Display the observations that has more than 1000 calories
+
+```{r}
+knitr::kable(fastfood[fastfood$calories > 1000,], "pipe")
+```
+
+Arrange observations with more than 40 in total_fat and more than 80 in total_carb in the descending order (PLEASE USE THE VARIABLE OF YOUR CHOICE TO ORGANISE THE DESCENDING ORDER) and save them to a new variable (dataset) called `dont_eat_this`
+
+
+```{r}
+dont_eat_this <- fastfood[fastfood$total_fat > 40 & fastfood$total_carb > 80,]
+dont_eat_this <- dont_eat_this[order(-dont_eat_this$total_fat),]
+```
+
+Using the initial dataset variable, use `case_when()` to create a new variable `heavy_food` which is equal to "heavy" when total calories are greater than 500, "low" when total calories are less than 250 and "average" for all other cases. Count the number of observations in each created category.
+
+```{r}
+library(tidyverse)
+fastfood <- fastfood %>% mutate(heavy_food = case_when(
+  calories > 500 ~ "heavy", 
+  calories < 250 ~ "low",
+  TRUE ~ "average"))
+```
+
+Display the types of variables in the dataset using `skimr` package 
+
+```{r}
+library(skimr)
+skim(fastfood)
+```
+
+Present the count observations from each restaurant in a descending order
+Show the number of distnct items on a menu in the dataset
+
+```{r}
+library(tidyverse) 
+menu_items <- fastfood %>% 
+  as.tibble() %>% 
+  group_by(restaurant)  %>%
+  summarize(unique_items = n_distinct(item))
+menu_items <- menu_items[order(-menu_items$unique_items),]
+knitr::kable(menu_items, "pipe")
+```
+
+Using groupings (group_by()), summarise and display the average number of calories for each restaurant.
+
+```{r}
+avg_calories_restaurants <- fastfood %>% 
+  as.tibble() %>% 
+  group_by(restaurant)  %>%
+  summarize(average_calories = mean(calories))
+knitr::kable(avg_calories_restaurants, "pipe")
+```
+
+ Add variables to the dataset, which:
+
+-  calculates the average calories per type of restaurant and call it `average_calories` 
+-  calculates the maximum total_fat per type of restaurant and call it `max_fat` 
+-  calculates the minimum cholesterol per type of restaurant and call it `min_cholesterol` 
+
+```{r}
+c1 <- fastfood %>% 
+  as.tibble() %>% 
+  group_by(restaurant)  %>%
+  summarize(average_calories = mean(calories))
+
+c2 <- fastfood %>% 
+  as.tibble() %>% 
+  group_by(restaurant)  %>%
+  summarize(max_fat = max(total_fat))
+
+c3 <- fastfood %>% 
+  as.tibble() %>% 
+  group_by(restaurant)  %>%
+  summarize(min_cholesterol = min(cholesterol))
+
+restaurant_summary <- c1 %>% mutate(max_fat = c2$max_fat) %>% mutate(min_cholestrol = c3$min_cholesterol)
+knitr::kable(restaurant_summary, "pipe")
+
+```
+
+
+Display the data vis of total fat per each type of restaurant. Write a narration (2-3 sentences) why you believe this type of data viz presents such information best. 
+
+We have used a bar plot to representing the total fat of all menu items of each 
+restaurant. This is the best for illustrating the total fat of each restaurant 
+even though it would be biased for establishments that have a lot of low fat menu items.
+This could have been represented with a stacked barchart of each restaurant but
+considering there are tens of items in each, it would not be of any valuable insight.
+
+```{r}
+restaurant_fat <- aggregate(fastfood$total_fat, by=list(Category=fastfood$restaurant), FUN=sum)
+restaurant_fat <- data.frame(restaurant_fat)
+names(restaurant_fat)[1] <- "Restaurant"
+names(restaurant_fat)[2] <- "Total_Fat"
+barplot(restaurant_fat$Total_Fat,names.arg = restaurant_fat$Restaurant,
+        ylab="Total Fat",
+        las = 2,
+        cex.names = 0.8
+        )
+```
+
+Add a variable to the dataset, which calculates the sum of cholesterol and sodium and call it `cholesterol_sodium`.
+
+```{r}
+fastfood <- fastfood %>% mutate(cholesterol_sodium = cholesterol + sodium) 
+```
+
+Remove the variable `salad`
+
+```{r}
+fastfood <- subset(fastfood, select = -c(salad))
+```
+
+Use observations for Mcdonalds to plot sugar variable against protein with `geom_point()` 
+
+```{r}
+library(ggplot2)
+mcdonalds_data <- fastfood %>% 
+  as.tibble() %>% 
+  filter(restaurant == 'Mcdonalds')
+mcdonalds_data <- data.frame(mcdonalds_data)
+sugar_data <- mcdonalds_data$sugar
+protein_data <- mcdonalds_data$protein
+plot_data <- cbind(sugar_data,protein_data)
+plot_data <- data.frame(plot_data)
+
+p <- ggplot(plot_data, aes(sugar_data,protein_data),)
+p + geom_point()  + ylab("Protein") + xlab("Sugar") + labs(title = "McDonald's Menu") + theme(plot.title = element_text(hjust = 0.5))
+
+```
 
