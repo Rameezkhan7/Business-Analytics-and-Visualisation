@@ -158,3 +158,127 @@ p + geom_point()  + ylab("Protein") + xlab("Sugar") + labs(title = "McDonald's M
 
 ```
 
+
+Part 3
+
+Identify variable(s) which should be factors and transform their type into a factor variable.
+
+```{r}
+fastfood$heavy_food <- as.factor(fastfood$heavy_food)
+```
+
+19. Create a new variable:
+
+Read about `cut_number()` function using Help and add a new variable to the dataset `calories_type`. Use `calories` variable for `cut_number()` function to split it into 3 categories `n=3`, add labels `labels=c("low", "med", "high")` and make the dataset ordered by arranging it according to calories. 
+
+Do not forget to save the updated dataset. 
+
+
+```{r}
+calories_type <- cut_interval(fastfood$calories,n=3,labels=c("low", "med", "high"))
+fastfood <- fastfood %>% mutate(calories_type)
+fastfood <- fastfood[order(fastfood$calories_type),]
+show(fastfood)
+```
+
+
+20. Create a dataviz that shows the distribution of `calories_type` in food items for each type of restaurant. Think carefully about the choice of data viz. Use facets, coordinates and theme layers to make your data viz visually appealing and meaningful. Use factors related data viz functions.
+
+```{r}
+install.packages("mltools",repos = "http://cran.us.r-project.org")
+```
+
+
+```{r}
+library(data.table)
+library(mltools)
+library(ggplot2)
+only_calorie_types <- data.frame(fastfood$restaurant,fastfood$calories_type)
+split_types <- one_hot(as.data.table(only_calorie_types))
+low_items <- aggregate(split_types$fastfood.calories_type_low, by=list(Restaurant=split_types$fastfood.restaurant), FUN=sum)
+colnames(low_items) <- c("restaurant","low")
+items_low <- data.frame(low_items$restaurant,"low",low_items$low)
+colnames(items_low) <- c("restaurant","type","count")
+
+med_items <- aggregate(split_types$fastfood.calories_type_med, by=list(Restaurant=split_types$fastfood.restaurant), FUN=sum)
+colnames(med_items) <- c("restaurant","med")
+items_med <- data.frame(med_items$restaurant,"med",med_items$med)
+colnames(items_med) <- c("restaurant","type","count")
+
+high_items <- aggregate(split_types$fastfood.calories_type_high, by=list(Restaurant=split_types$fastfood.restaurant), FUN=sum)
+colnames(high_items) <- c("restaurant","high")
+items_high <- data.frame(high_items$restaurant,"high",high_items$high)
+colnames(items_high) <- c("restaurant","type","count")
+
+final_calorie_types <- rbind(items_low,items_med,items_high)
+
+calories_types_name = c("low","med","high")
+
+ggplot(final_calorie_types, aes(fill=type, y=count, x=restaurant)) + 
+  geom_bar(position="stack", stat="identity") +
+  ggtitle("Calorie Type Distribution of Restaurants") +
+  xlab("Restaurant Names") +
+  ylab("Menu Items") +
+  guides(fill=guide_legend(title="Calories Type"))
+  
+#test77 <- cbind(low_items,med_items$med,high_items$high)
+#colnames(test77) = c("Restaurant", "Low", "Med", "High")
+
+#econdatalong <- gather(test77, key="measure", value="value", c("Low", "Med","High"))
+
+#ggplot(econdatalong, aes(x=Restaurant, y=value))+
+#  geom_bar(stat='identity', fill="forest green")+
+#  facet_wrap(~measure)
+
+```
+
+
+Add a new variable that shows the percentage of `trans_fat` in `total_fat` (`trans_fat`/`total_fat`).  The variable should be named `trans_fat_percent`. Do not forget to save the updated dataset. 
+
+
+```{r}
+
+fastfood <-  fastfood %>% mutate(trans_fat_percent = (trans_fat / total_fat)*100) 
+
+```
+
+
+Create a dataviz that shows the distribution of `trans_fat` in food items for each type of restaurant. Think carefully about the choice of data viz. Use facets, coordinates and theme layers to make your data viz visually appealing and meaningful.
+
+```{r}
+
+
+#econdatalong2 <- gather(fastfood, key="measure", value="value", c("Low", "Med","High"))
+
+ggplot(fastfood, aes(x=restaurant, y=trans_fat))+
+  geom_point() + 
+  ggtitle("Trans Fat Distribution of Restaurants") +
+  xlab("Restaurant Names") +
+  ylab("Trans-Fat") 
+```
+
+
+Calculate and show the average (mean) `total_fat` for each type of restaurant. No need to save it as a variable.
+
+```{r}
+
+temp1 <- fastfood %>% group_by(restaurant)  %>%
+  summarize(average_fat = mean(total_fat))
+show(temp1)
+
+```
+
+
+And create a dataviz that allow to compare different restaurants on this variable (`total_fat`). You can present it on one dataviz (= no facets). 
+
+
+```{r}
+barplot(temp1$average_fat, names.arg = temp1$restaurant,
+        ylab="Average Fat",
+        las = 2,
+        cex.names = 0.8
+        )
+
+```
+
+
